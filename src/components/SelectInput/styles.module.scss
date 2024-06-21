@@ -1,0 +1,38 @@
+.select {
+    .control-class-name {
+        border-radius: 5rem;
+        border: 1px solid #3b5249;
+        padding: 0.25rem 0.75rem;
+        min-width: 8.25rem;
+    }
+
+    :global(.select-value) > div {
+        font-size: 1rem;
+        line-height: 1.375;
+        font-weight: 700;
+        color: #3b5249;
+    }
+}
+
+:global(._selectOptionsWrapper_80hpo_64) {
+    box-shadow: unset !important;
+    margin-top: 0.25rem;
+}
+
+.select-option-className {
+    padding-top: 0;
+    border-radius: 4px;
+    background: #fff;
+    box-shadow: 1px 2px 4px 1px rgba(0, 0, 0, 0.08);
+}
+
+.option-item-class-name {
+    min-width: 12.5rem;
+    padding: 1rem 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.42;
+
+    &:hover {
+        background: rgba(59, 82, 73, 0.06);
+    }
+}
