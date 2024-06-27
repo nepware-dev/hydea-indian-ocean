@@ -13,9 +13,10 @@ interface SelectProps {
         value: string;
     }>;
     placeholder: string;
+    onChange(e: React.ChangeEventHandler<HTMLInputElement>): void;
 }
 
-const Select: React.FC<SelectProps> = ({ options, placeholder }) => {
+const Select: React.FC<SelectProps> = ({ options, placeholder, onChange }) => {
     return (
         <SelectInput
             className={styles.select}
@@ -26,8 +27,9 @@ const Select: React.FC<SelectProps> = ({ options, placeholder }) => {
             options={options}
             valueExtractor={valueExtractor}
             keyExtractor={keyExtractor}
-            clearable={false}
+            clearable={true}
             placeholder={placeholder}
+            onChange={onChange}
         />
     );
 };
