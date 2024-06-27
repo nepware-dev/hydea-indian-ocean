@@ -8,14 +8,15 @@ const keyExtractor = (item: { value: string }) => item?.value;
 const valueExtractor = (item: { title: string }) => item?.title;
 
 interface SelectProps {
-    options: Array<{
-        title: string;
-        value: string;
-    }>;
-    placeholder: string;
+  options: Array<{
+    title: string;
+    value: string;
+  }>;
+  placeholder: string;
+  onChange(e: React.ChangeEventHandler<HTMLInputElement>): void;
 }
 
-const Select: React.FC<SelectProps> = ({ options, placeholder }) => {
+const Select: React.FC<SelectProps> = ({ options, placeholder, onChange }) => {
     return (
         <SelectInput
             className={styles.select}
@@ -26,8 +27,9 @@ const Select: React.FC<SelectProps> = ({ options, placeholder }) => {
             options={options}
             valueExtractor={valueExtractor}
             keyExtractor={keyExtractor}
-            clearable={false}
+            clearable={true}
             placeholder={placeholder}
+            onChange={onChange}
         />
     );
 };
