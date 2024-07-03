@@ -8,14 +8,12 @@ const subfilters = [
                 value: 'Typologie',
                 options: [
                     {
-                        title: 'Habitation',
-                        label_fr: "Bâtiment à caractère d'habitation",
+                        title: "Bâtiment à caractère d'habitation",
                         title_en: 'Residential building',
                         value: 'hab',
                     },
                     {
                         title: 'Bâtiment à caractère social ou administratif',
-                        label_fr: 'Bâtiment à caractère social ou administratif',
                         title_en: 'Social or administrative building',
                         value: 'soc',
                     },
