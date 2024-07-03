@@ -114,7 +114,17 @@ const Home = () => {
     }, []);
 
     const mapFilterExp = useMemo(() => {
-        const _filterExpression = Object.keys(filter).map((key) => ['==', ['get', key], filter[key].toString()]);
+        const _filterExpression = Object.keys(filter).map((key) => {
+            if (['R'].includes(key)) {
+                const match = filter[key].match(/([<>])(\d+(?:\.\d+)?)/);
+                if (match) {
+                    const [, operator, value] = match;
+                    return [operator, ['get', key], value];
+                }
+                return [];
+            }
+            return ['==', ['get', key], filter[key].toString()];
+        });
         return ['all', ..._filterExpression];
     }, [filter]);
 
@@ -254,7 +264,7 @@ const Home = () => {
                     source='HydeaGeoJson'
                     filter={mapFilterExp}
                     layout={{
-                        'icon-image': ['coalesce', ['get', fields.territoryField], 'red'],
+                        'icon-image': ['coalesce', ['get', fields.territoryField], 'madagascar'],
                         'icon-size': 1,
                         'icon-allow-overlap': true,
                     }}

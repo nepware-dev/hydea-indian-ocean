@@ -203,7 +203,6 @@ const subfilters = [
         ],
         subFilter: [
             {
-                // not found yet...
                 title: 'Valeur Patrimoniale',
                 value: 'VALEUR',
                 title_en: 'Heritage value',
@@ -240,7 +239,7 @@ const subfilters = [
                     },
                     {
                         title: 'VALEUR PATRIMONIALE ESTIMÉE',
-                        value: 'Estimation',
+                        value: 'R',
                         title_en: 'Estimated heritage value',
                         flatOptions: [
                             '>2.75',
@@ -461,9 +460,67 @@ const subfilters = [
                 ],
             },
         ],
+        subFilter: [
+            {
+                title: 'Valeur Patrimoniale',
+                value: 'VALEUR',
+                title_en: 'Heritage value',
+                options: [
+                    {
+                        title: 'Caractère historique intangible',
+                        title_en: 'Intangible historic character',
+                        value: 'Caractère historique intangible',
+                        flatOptions: [0, 1, 2, 3],
+                    },
+                    {
+                        title: 'Authenticité et intégrité',
+                        value: 'Authenticité et intégrité',
+                        title_en: 'Authenticity and integrity',
+                        flatOptions: [0, 1, 2, 3],
+                    },
+                    {
+                        title: 'Caractère architectural',
+                        value: 'Caractère architectural',
+                        title_en: 'Architectural character',
+                        flatOptions: [0, 1, 2, 3],
+                    },
+                    {
+                        title: 'Rôle dans le paysage et le territoire',
+                        value: 'Rôle dans le paysage et le territoire',
+                        title_en: 'Role in landscape and territory',
+                        flatOptions: [0, 1, 2, 3],
+                    },
+                    {
+                        title: 'Caractère décoratif',
+                        value: 'Caractère décoratif',
+                        title_en: 'Decorative character',
+                        flatOptions: [0, 1, 2, 3],
+                    },
+                    {
+                        title: 'VALEUR PATRIMONIALE ESTIMÉE',
+                        value: 'R',
+                        title_en: 'Estimated heritage value',
+                        flatOptions: [
+                            '>2.75',
+                            '>2.5',
+                            '>2.25',
+                            '>2',
+                            '>1.5',
+                            '>1',
+                            '<2.75',
+                            '<2.5',
+                            '<2.25',
+                            '<2',
+                            '<1.5',
+                            '<1',
+                        ],
+                    },
+                ],
+            },
+        ],
     },
     {
-        // not found yet...
+        // not found...
         title: 'Patrimoine immatériel',
         options: [
             {
