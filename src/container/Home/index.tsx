@@ -1,15 +1,19 @@
-import mapboxgl from 'mapbox-gl';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import ReactDOM from 'react-dom/client';
-import ImageGallery from 'react-image-gallery';
-
-import 'mapbox-gl/dist/mapbox-gl.css';
-import 'react-image-gallery/styles/css/image-gallery.css';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import Map, {
+    NavigationControl,
+    FullscreenControl,
+    Source,
+    Layer,
+    MapRef,
+    Popup,
+    MapLayerMouseEvent,
+} from 'react-map-gl';
 
 import greenMarker from 'assets/green-marker.png';
 import redMarker from 'assets/red-marker.png';
 import yellowMarker from 'assets/yellow-marker.png';
 import Container from 'components/Container';
+import Gallery from 'components/Gallery';
 import Select from 'components/SelectInput';
 import fields from 'config/fields';
 import filters from 'config/filters';
@@ -19,11 +23,10 @@ import styles from 'styles.module.scss';
 import Form from '@ra/components/Form/Advanced';
 import cs from '@ra/cs';
 
-mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 const HYDEA_GEOJSON_URL = import.meta.env.VITE_HYDEA_GEOJSON_URL;
 
 interface PopupProps {
-    coordinates: any;
     data: any;
 }
 
@@ -45,42 +48,22 @@ const markers = [
     { title: 'maurice', icon: yellowMarker },
 ];
 
+const dataReponse = await fetch(HYDEA_GEOJSON_URL);
+const data = await dataReponse.json();
+
 const Home = () => {
-    const mapContainer = useRef<HTMLDivElement | null>(null);
-    const map = useRef<mapboxgl.Map | null>(null);
+    const mapRef = useRef<MapRef>(null);
 
     const [dataType, setDataType] = useState<FilterItem | null>(null);
     const [filter, setFilter] = useState<Filter>({});
+    const [popupData, setPopupData] = useState<any>(null);
 
-    const PopupWrapper: React.FC<PopupProps> = ({ coordinates, data }) => {
-        const popupRef = useRef(null);
-
-        useEffect(() => {
-            if (popupRef.current && map.current) {
-                const popup = new mapboxgl.Popup()
-                    .setLngLat(coordinates)
-                    .setDOMContent(popupRef.current)
-                    .addTo(map.current);
-
-                return () => {
-                    popup.remove();
-                };
-            }
-        }, [coordinates]);
-
-        const galleryProps = {
-            infinite: false,
-            showNav: false,
-            showThumbnails: false,
-            showFullscreenButton: false,
-            showPlayButton: false,
-        };
-
+    const PopupContent: React.FC<PopupProps> = ({ data }) => {
         return (
-            <div ref={popupRef} className={styles.mapPopUp}>
+            <div className={styles.mapPopUp}>
                 <span className={styles.mapPopUpHeader}>{data?.title}</span>
                 <p>{data?.description}</p>
-                {data?.images && <ImageGallery {...galleryProps} items={data.images} />}
+                {data?.images && <Gallery images={data.images} />}
                 {Object.keys(data.properties)
                     .filter((key) => !(fields.excludeAutomatedFields && key.startsWith('_')))
                     .filter((key) => !fields.excludedFields.includes(key))
@@ -93,89 +76,47 @@ const Home = () => {
         );
     };
 
-    useEffect(() => {
-        if (!mapContainer.current) return;
-        const mapInstance = new mapboxgl.Map({
-            container: mapContainer.current,
-            center: [51.284, -16.857],
-            zoom: 4,
-        });
-        map.current = mapInstance;
-        mapInstance.addControl(new mapboxgl.NavigationControl(), 'top-left');
-        mapInstance.addControl(new mapboxgl.FullscreenControl(), 'top-left');
+    const onMapClick = useCallback(
+        (e: MapLayerMouseEvent) => {
+            if (popupData) {
+                return setPopupData(null);
+            }
 
-        const loadMarkerImages = () => {
-            markers.filter((marker) =>
-                mapInstance?.loadImage(marker.icon, (error, res: any) => {
-                    mapInstance?.addImage(marker.title.toString(), res);
-                    if (error) {
-                        console.warn(error);
-                    }
-                }),
-            );
-        };
+            if (!e.features?.length) {
+                return;
+            }
 
-        const addGeoJsonSource = (data: mapboxgl.MapboxGeoJSONFeature) => {
-            mapInstance.addSource('HydeaGeoJson', {
-                type: 'geojson',
-                data: data,
-            });
-        };
-
-        const addGeoJsonLayers = () => {
-            mapInstance.addLayer({
-                id: 'hydea-places',
-                type: 'symbol',
-                source: 'HydeaGeoJson',
-                layout: {
-                    'icon-image': ['coalesce', ['get', fields.territoryField], 'red'],
-                    'icon-size': 1.25,
-                    'icon-allow-overlap': true,
-                },
-            });
-        };
-
-        const initializeMap = () => {
-            loadMarkerImages();
-            fetch(HYDEA_GEOJSON_URL)
-                .then((response) => response.json())
-                .then((data) => {
-                    addGeoJsonSource(data);
-                    addGeoJsonLayers();
-                });
-        };
-
-        mapInstance.on('load', initializeMap);
-        mapInstance.on('click', 'hydea-places', (e: any) => {
             const coordinates = e?.features[0].geometry.coordinates.slice();
             const properties = e?.features[0].properties;
             while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
                 coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
             }
-            const popUpContent = {
+            const newPopupData = {
                 title: properties[fields.titleField],
                 images: properties[fields.galleryField],
                 properties,
+                coordinates: coordinates,
             };
-            ReactDOM.createRoot(document.createElement('div')).render(
-                <PopupWrapper coordinates={coordinates} data={popUpContent} />,
-            );
-        });
+            setPopupData(newPopupData);
+        },
+        [popupData],
+    );
 
-        return () => {
-            mapInstance.remove();
-        };
+    const onMapLoaded = useCallback(() => {
+        markers.filter((marker) =>
+            mapRef.current?.loadImage(marker.icon, (error, res: any) => {
+                mapRef.current?.addImage(marker.title.toString(), res);
+                if (error) {
+                    console.warn(error);
+                }
+            }),
+        );
     }, []);
 
-    useEffect(() => {
-        if (map.current) {
-            const _filterExpression = Object.keys(filter).map((key) => ['==', ['get', key], filter[key].toString()]);
-
-            if (map.current.isStyleLoaded()) {
-                map.current.setFilter('hydea-places', ['all', ..._filterExpression]);
-            }
-        }
-    }, [dataType, filter]);
+    const mapFilterExp = useMemo(() => {
+        const _filterExpression = Object.keys(filter).map((key) => ['==', ['get', key], filter[key].toString()]);
+        return ['all', ..._filterExpression];
+    }, [filter]);
 
     const updateLayerFilter = useCallback(
         (option: FilterItem, field: string) => {
@@ -217,7 +158,7 @@ const Home = () => {
     );
 
     const calculateOptions = useCallback((filterItem: FilterItem) => {
-        if(filterItem.options) {
+        if (filterItem.options) {
             return filterItem.options;
         } else if (filterItem.flatOptions) {
             return filterItem.flatOptions.map((option: string | number) => ({
@@ -286,7 +227,49 @@ const Home = () => {
                     </>
                 )}
             </Form>
-            <div ref={mapContainer} className={styles.map} />
+            <Map
+                ref={mapRef}
+                style={{
+                    height: '80vh',
+                    width: '100%',
+                    margin: '0 0 90px 0',
+                }}
+                mapboxAccessToken={MAPBOX_TOKEN}
+                initialViewState={{
+                    longitude: 51.284,
+                    latitude: -16.857,
+                    zoom: 4,
+                }}
+                onLoad={onMapLoaded}
+                mapStyle='mapbox://styles/mapbox/streets-v9'
+                onClick={onMapClick}
+                interactiveLayerIds={['hydea-places']}
+            >
+                <NavigationControl position='top-left' />
+                <FullscreenControl position='top-left' />
+                <Source id='HydeaGeoJson' type='geojson' data={data} />
+                <Layer
+                    id='hydea-places'
+                    type='symbol'
+                    source='HydeaGeoJson'
+                    filter={mapFilterExp}
+                    layout={{
+                        'icon-image': ['coalesce', ['get', fields.territoryField], 'red'],
+                        'icon-size': 1,
+                        'icon-allow-overlap': true,
+                    }}
+                />
+                {!!popupData && (
+                    <Popup
+                        longitude={popupData.coordinates[0]}
+                        latitude={popupData.coordinates[1]}
+                        closeOnClick={true}
+                        onClose={() => setPopupData(null)}
+                    >
+                        <PopupContent data={popupData} />
+                    </Popup>
+                )}
+            </Map>
         </Container>
     );
 };
