@@ -1,4 +1,5 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { type FeatureCollection } from '@types/geojson';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Map, {
     NavigationControl,
     FullscreenControl,
@@ -48,33 +49,40 @@ const markers = [
     { title: 'maurice', icon: yellowMarker },
 ];
 
-const dataReponse = await fetch(HYDEA_GEOJSON_URL);
-const data = await dataReponse.json();
+const PopupContent: React.FC<PopupProps> = ({ data }) => {
+    return (
+        <div className={styles.mapPopUp}>
+            <div className={styles.mapPopUpHeader}>{data?.title}</div>
+            <p>{data?.description}</p>
+            {data?.images && <Gallery images={data.images} />}
+            {Object.keys(data.properties)
+                .filter((key) => !(fields.excludeAutomatedFields && key.startsWith('_')))
+                .filter((key) => !fields.excludedFields.includes(key))
+                .map((key) => (
+                    <div className={styles.property}>
+                        <span className={styles.title}>{key}</span>: {data.properties[key]}
+                    </div>
+                ))}
+        </div>
+    );
+};
 
 const Home = () => {
     const mapRef = useRef<MapRef>(null);
 
+    const [data, setData] = useState<FeatureCollection>(null);
     const [dataType, setDataType] = useState<FilterItem | null>(null);
     const [filter, setFilter] = useState<Filter>({});
     const [popupData, setPopupData] = useState<any>(null);
 
-    const PopupContent: React.FC<PopupProps> = ({ data }) => {
-        return (
-            <div className={styles.mapPopUp}>
-                <span className={styles.mapPopUpHeader}>{data?.title}</span>
-                <p>{data?.description}</p>
-                {data?.images && <Gallery images={data.images} />}
-                {Object.keys(data.properties)
-                    .filter((key) => !(fields.excludeAutomatedFields && key.startsWith('_')))
-                    .filter((key) => !fields.excludedFields.includes(key))
-                    .map((key) => (
-                        <div>
-                            <b>{key}</b>: {data.properties[key]}
-                        </div>
-                    ))}
-            </div>
-        );
-    };
+    useEffect(() => {
+        const fetchData = async () => {
+            const response = await fetch(HYDEA_GEOJSON_URL);
+            const data = await response.json();
+            setData(data);
+        };
+        fetchData();
+    }, []);
 
     const onMapClick = useCallback(
         (e: MapLayerMouseEvent) => {
@@ -115,7 +123,7 @@ const Home = () => {
 
     const mapFilterExp = useMemo(() => {
         const _filterExpression = Object.keys(filter).map((key) => {
-            if (['R'].includes(key)) {
+            if (fields.expressionFields.includes(key)) {
                 const match = filter[key].match(/([<>])(\d+(?:\.\d+)?)/);
                 if (match) {
                     const [, operator, value] = match;
@@ -176,7 +184,15 @@ const Home = () => {
                 value: option,
             }));
         }
-        return [];
+
+        // try to dynamically generate options from the geojson data if no options given
+        const values: Array<string | number> = [
+            ...new Set(data?.features.map((feature) => feature?.properties?.[filterItem.value])),
+        ];
+        return values
+            .filter((val) => val ?? '')
+            .filter((val) => val !== '')
+            .map((val) => ({ title: val.toString(), value: val }));
     }, []);
 
     return (
