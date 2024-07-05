@@ -8,6 +8,7 @@
     &__group {
         display: flex;
         flex: 1 1 50%;
+        flex-wrap: wrap;
         gap: 1rem;
     }
 
@@ -42,9 +43,6 @@
 }
 
 .map {
-    height: 80vh;
-    width: 100%;
-    margin-bottom: 4rem;
 
     &__pop-up {
         max-height: 400px;
