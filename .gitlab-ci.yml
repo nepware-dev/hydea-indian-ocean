@@ -1,0 +1,31 @@
+image: node:latest
+
+stages:
+  - deploy
+
+cache:
+  paths:
+    - node_modules/
+
+
+before_script:
+  - mkdir -p src/vendor/
+  - git clone --branch develop https://gitlab.com/nepware-internals/react-arsenal.git src/vendor/react-arsenal
+
+pages:
+  stage: deploy
+  script:
+    - corepack enable
+    - pnpm install
+    - env > .env
+    # CI treats warnings as errors so supress those
+    - export GENERATE_SOURCEMAP=false; pnpm build || true
+    - rm -rf public
+    - mv ./dist ./public
+    - cp ./public/index.html ./public/404.html
+  artifacts:
+    paths:
+    - public
+    - node_modules/
+  only:
+    - develop

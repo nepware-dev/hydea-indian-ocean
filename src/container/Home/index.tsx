@@ -11,6 +11,7 @@ import Map, {
 } from 'react-map-gl';
 
 import greenMarker from 'assets/green-marker.png';
+import defaultData from 'assets/hydea.json';
 import redMarker from 'assets/red-marker.png';
 import yellowMarker from 'assets/yellow-marker.png';
 import Container from 'components/Container';
@@ -77,9 +78,13 @@ const Home = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            const response = await fetch(HYDEA_GEOJSON_URL);
-            const data = await response.json();
-            setData(data);
+            try {
+                const response = await fetch(HYDEA_GEOJSON_URL);
+                const data = await response.json();
+                setData(data);
+            } catch (err) {
+                setData(defaultData);
+            }
         };
         fetchData();
     }, []);
@@ -257,8 +262,8 @@ const Home = () => {
                 ref={mapRef}
                 style={{
                     height: '80vh',
-                    width: '100%',
-                    margin: '0 0 90px 0',
+                    width: 'calc(100% - 4rem)',
+                    margin: '0 0 40px 0',
                 }}
                 mapboxAccessToken={MAPBOX_TOKEN}
                 initialViewState={{
