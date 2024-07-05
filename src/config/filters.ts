@@ -523,7 +523,7 @@ const subfilters = [
         options: [
             {
                 title: 'Types_de_patrimoine',
-                options: [],
+                value: 'Types_de_patrimoine',
             },
             {
                 title: 'Sexe(s) concerné(s)',
