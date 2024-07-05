@@ -272,7 +272,7 @@ const Home = () => {
                     zoom: 4,
                 }}
                 onLoad={onMapLoaded}
-                mapStyle='mapbox://styles/mapbox/streets-v9'
+                mapStyle='mapbox://styles/mapbox/satellite-v9'
                 onClick={onMapClick}
                 interactiveLayerIds={['hydea-places']}
             >
