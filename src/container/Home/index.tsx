@@ -99,16 +99,12 @@ const Home = () => {
                 return;
             }
 
-            const coordinates = e?.features[0].geometry.coordinates.slice();
             const properties = e?.features[0].properties;
-            while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-                coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-            }
             const newPopupData = {
                 title: properties[fields.titleField],
                 images: properties[fields.galleryField],
                 properties,
-                coordinates: coordinates,
+                coordinates: [e.lngLat.lng, e.lngLat.lat],
             };
             setPopupData(newPopupData);
         },
